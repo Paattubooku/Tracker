@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+  --color-water-50: #ecfeff;
+  --color-water-100: #cffafe;
+  --color-water-200: #a5f3fc;
+  --color-water-300: #67e8f9;
+  --color-water-400: #22d3ee;
+  --color-water-500: #06b6d4;
+  --color-water-600: #0891b2;
+  --color-water-700: #0e7490;
+  --color-expense-50: #fdf2f8;
+  --color-expense-100: #fce7f3;
+  --color-expense-200: #fbcfe8;
+  --color-expense-300: #f9a8d4;
+  --color-expense-400: #f472b6;
+  --color-expense-500: #ec4899;
+  --color-expense-600: #db2777;
+  --color-expense-700: #be185d;
+  --color-success-500: #22c55e;
+  --color-warning-500: #f59e0b;
+  --color-danger-500: #ef4444;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Theme Variables ---- */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+  --gradient-water: linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%);
+  --gradient-expense: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #f9a8d4 100%);
+  --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dark {
+  --glass-bg: rgba(15, 23, 42, 0.65);
+  --glass-border: rgba(99, 102, 241, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --surface-primary: #0f172a;
+  --surface-secondary: #020617;
+  --surface-tertiary: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --border-color: rgba(99, 102, 241, 0.08);
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a5b4fc 100%);
+  --gradient-water: linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%);
+  --gradient-expense: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #f472b6 100%);
+  --gradient-bg: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+}
+
+/* ---- Glass Effects ---- */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---- Gradients ---- */
+.gradient-primary { background: var(--gradient-primary); }
+.gradient-water { background: var(--gradient-water); }
+.gradient-expense { background: var(--gradient-expense); }
+
+/* ---- Custom Text Colors ---- */
+.text-primary-custom { color: var(--text-primary); }
+.text-secondary-custom { color: var(--text-secondary); }
+.text-tertiary-custom { color: var(--text-tertiary); }
+
+/* ---- Surface Colors ---- */
+.surface-primary { background-color: var(--surface-primary); }
+.surface-secondary { background-color: var(--surface-secondary); }
+
+/* ---- Animations ---- */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 3s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.progress-ring {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* ---- Dark Theme Glow Effects ---- */
+.dark .gradient-water {
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25);
+}
+
+.dark .gradient-expense {
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.25);
+}
+
+.dark .gradient-primary {
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.3);
+  border-radius: 3px;
+}
+
+/* ---- Smooth Transitions ---- */
+body, .theme-transition, .theme-transition * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
