@@ -255,6 +255,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [configured]);
 
   // ---- Realtime subscriptions ----
+  // When we optimistically insert, the entry gets a temp ID.
+  // When Supabase confirms, the realtime event fires with the real DB ID.
+  // We must REPLACE the optimistic entry (matched by amount + timestamp)
+  // instead of appending — otherwise we get a duplicate in the UI.
   useEffect(() => {
     if (!supabase || !configured) return;
     const sb = supabase;
@@ -266,12 +270,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
         { event: 'INSERT', schema: 'public', table: 'water_entries' },
         (payload) => {
           const e = payload.new as Record<string, unknown>;
-          setWaterEntries(prev => [{
+          const newEntry: WaterEntry = {
             id: e.id as string,
             amount: e.amount as number,
             timestamp: e.created_at as string,
             type: e.entry_type as WaterEntry['type'],
-          }, ...prev]);
+          };
+          setWaterEntries(prev => {
+            // Find an optimistic entry that matches this insert (same amount, within 5s)
+            const matchIdx = prev.findIndex(entry =>
+              entry.amount === newEntry.amount &&
+              Math.abs(new Date(entry.timestamp).getTime() - new Date(newEntry.timestamp).getTime()) < 5000
+            );
+            if (matchIdx !== -1) {
+              // Replace the optimistic entry with the real one (upgrades temp ID → DB UUID)
+              const updated = [...prev];
+              updated[matchIdx] = newEntry;
+              return updated;
+            }
+            // No match — this came from another device/widget, add it
+            return [newEntry, ...prev];
+          });
         }
       )
       .on(
@@ -279,7 +298,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         { event: 'DELETE', schema: 'public', table: 'water_entries' },
         (payload) => {
           const e = payload.old as Record<string, unknown>;
-          setWaterEntries(prev => prev.filter(entry => entry.id !== e.id));
+          const deletedId = e.id as string;
+          setWaterEntries(prev => prev.filter(entry => entry.id !== deletedId));
         }
       )
       .on(
@@ -287,13 +307,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
         { event: 'INSERT', schema: 'public', table: 'expense_entries' },
         (payload) => {
           const e = payload.new as Record<string, unknown>;
-          setExpenseEntries(prev => [{
+          const newEntry: ExpenseEntry = {
             id: e.id as string,
             amount: Number(e.amount),
             category: e.category as string,
             description: e.description as string,
             timestamp: e.created_at as string,
-          }, ...prev]);
+          };
+          setExpenseEntries(prev => {
+            // Find an optimistic entry that matches this insert (same amount + category, within 5s)
+            const matchIdx = prev.findIndex(entry =>
+              entry.amount === newEntry.amount &&
+              entry.category === newEntry.category &&
+              Math.abs(new Date(entry.timestamp).getTime() - new Date(newEntry.timestamp).getTime()) < 5000
+            );
+            if (matchIdx !== -1) {
+              // Replace the optimistic entry with the real one
+              const updated = [...prev];
+              updated[matchIdx] = newEntry;
+              return updated;
+            }
+            // No match — this came from another device/widget, add it
+            return [newEntry, ...prev];
+          });
         }
       )
       .on(
