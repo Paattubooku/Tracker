@@ -19,9 +19,9 @@
 // ============================================================================
 
 // ============================ CONFIGURATION =================================
-const SUPABASE_URL = "https://gorcnicinidmpjevduhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvcmNuaWNpbmlkbXBqZXZkdWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTY4NDEsImV4cCI6MjA5ODgzMjg0MX0.AIkJqwDBI8odQ_Lg00SuujUr6cknxNkZeyHEwW8oScw";
-const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvcmNuaWNpbmlkbXBqZXZkdWhnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzI1Njg0MSwiZXhwIjoyMDk4ODMyODQxfQ.Bx0WI6ncRTbUU5E0X-oMLnyN-PIAFAYlcL9BMTrdl6o";
+const SUPABASE_URL = "";
+const SUPABASE_ANON_KEY = "";
+const SUPABASE_SERVICE_ROLE_KEY = "";
 
 const TAP_URL = "";
 const FETCH_TIMEOUT_MS = 8000;
