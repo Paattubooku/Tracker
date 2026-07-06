@@ -471,7 +471,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (goal.daily !== undefined) updates.daily_water_goal = goal.daily;
       if (goal.reminderInterval !== undefined) updates.reminder_interval_minutes = goal.reminderInterval;
 
-      const { error } = await supabase.from('user_settings').update(updates).limit(1);
+      const { error } = await supabase.from('user_settings').update(updates).eq('id', 1);
       if (error) console.error('Failed to update water goal:', error);
     }
   }, [configured]);
@@ -483,7 +483,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const updates: Record<string, unknown> = {};
       if (budget.monthly !== undefined) updates.monthly_budget = budget.monthly;
 
-      const { error } = await supabase.from('user_settings').update(updates).limit(1);
+      const { error } = await supabase.from('user_settings').update(updates).eq('id', 1);
       if (error) console.error('Failed to update budget:', error);
     }
   }, [configured]);
@@ -498,7 +498,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (s.weekStartsOn !== undefined) updates.week_starts_on = s.weekStartsOn;
       if (s.notifications !== undefined) updates.notifications_enabled = s.notifications;
 
-      const { error } = await supabase.from('user_settings').update(updates).limit(1);
+      const { error } = await supabase.from('user_settings').update(updates).eq('id', 1);
       if (error) console.error('Failed to update settings:', error);
     }
   }, [configured]);
