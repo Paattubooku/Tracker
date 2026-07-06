@@ -18,8 +18,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const {
     todayWaterTotal, todayExpenseTotal, waterGoal, expenseBudget,
     weekWaterData, categoryBreakdown, waterEntries, expenseEntries,
-    dbStatus,
+    dbStatus, settings,
   } = useData();
+  const currency = settings?.currency || '$';
 
   const waterPercent = Math.min((todayWaterTotal / waterGoal.daily) * 100, 100);
   const budgetUsed = (() => {
@@ -104,7 +105,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {budgetPercent.toFixed(0)}% used
             </span>
           </div>
-          <p className="text-2xl font-bold" style={{ color: textColor }}>${todayExpenseTotal.toFixed(0)}</p>
+          <p className="text-2xl font-bold" style={{ color: textColor }}>{currency}{todayExpenseTotal.toFixed(0)}</p>
           <p className="text-xs mt-1" style={{ color: mutedColor }}>spent today</p>
           <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(148,163,184,0.15)' : 'rgba(0,0,0,0.06)' }}>
             <div className="h-full rounded-full gradient-expense transition-all duration-500" style={{ width: `${budgetPercent}%` }} />
@@ -129,7 +130,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             style={{ background: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)' }}>
             <TrendingUp className="w-5 h-5 text-amber-500" />
           </div>
-          <p className="text-2xl font-bold" style={{ color: textColor }}>${budgetUsed.toFixed(0)}</p>
+          <p className="text-2xl font-bold" style={{ color: textColor }}>{currency}{budgetUsed.toFixed(0)}</p>
           <p className="text-xs mt-1" style={{ color: mutedColor }}>monthly spend</p>
         </div>
       </div>
@@ -214,7 +215,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     fontSize: '12px',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value: any) => [`$${Number(value).toFixed(2)}`, '']}
+                  formatter={(value: any) => [`${currency}${Number(value).toFixed(2)}`, '']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -226,7 +227,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: cat.color }} />
                   <span className="text-xs" style={{ color: mutedColor }}>{cat.name}</span>
                 </div>
-                <span className="text-xs font-medium" style={{ color: textColor }}>${cat.value.toFixed(0)}</span>
+                <span className="text-xs font-medium" style={{ color: textColor }}>{currency}{cat.value.toFixed(0)}</span>
               </div>
             ))}
           </div>
@@ -296,7 +297,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     <p className="text-[10px]" style={{ color: mutedColor }}>{entry.category}</p>
                   </div>
                 </div>
-                <p className="text-sm font-semibold" style={{ color: textColor }}>${entry.amount.toFixed(2)}</p>
+                <p className="text-sm font-semibold" style={{ color: textColor }}>{currency}{entry.amount.toFixed(2)}</p>
               </div>
             ))}
           </div>
