@@ -68,34 +68,76 @@ export const categoryColors: Record<string, string> = {
   Health: '#22c55e',
   Education: '#06b6d4',
   Subscriptions: '#f97316',
+  UPI: '#6366f1',
 };
+
+// Auto-categorize payee names from bank SMS / UPI transactions
+export function autoCategorize(payee: string): string {
+  const name = payee.toUpperCase().trim();
+
+  const rules: [string[], string][] = [
+    // Food
+    [['SWIGGY', 'ZOMATO', 'DOMINOS', 'PIZZA HUT', 'MCDONALDS', 'BURGER KING', 'KFC', 'SUBWAY', 'STARBUCKS', 'CHAAYOS', 'EAT.FIT', 'FRESHMENU', 'BOX8', 'FAASOS', 'BEHROUZ', 'LUNCHBOX', 'ROLLS MAN', 'HALDIRAM', 'BIKANERVALA', 'SAGAR RATNA', 'CHAI POINT', 'COSTA COFFEE', 'BARISTA', 'CREAM STONE', 'ICE CREAM', 'HAVMOR', 'NATURAL'], 'Food'],
+    // Transport
+    [['UBER', 'OLA', 'RAPIDO', 'IRCTC', 'MAKEMYTRIP', 'GOIBIBO', 'CLEARTRIP', 'REDBUS', 'YATRA', 'BLUSMART', 'INDIGO', 'SPICEJET', 'AIR INDIA', 'VISTARA', 'AKASA AIR', 'METRO', 'FASTAG', 'TOLL'], 'Transport'],
+    // Shopping
+    [['AMAZON', 'FLIPKART', 'MYNTRA', 'AJIO', 'NYKAA', 'SNAPDEAL', 'MEESHO', 'CROMA', 'RELIANCE DIGITAL', 'VIJAY SALES', 'IKEA', 'H&M', 'ZARA', 'TATA CLIQ', 'FIRSTCRY', 'DECATHLON', 'NYKA FASHION', 'LIMEROAD', 'STREET STYLE'], 'Shopping'],
+    // Entertainment
+    [['NETFLIX', 'SPOTIFY', 'HOTSTAR', 'DISNEY', 'PRIME VIDEO', 'YOUTUBE', 'APPLE MUSIC', 'SOUNDCloud', 'GAANA', 'JIOSAAVN', 'WYNK', 'BOOKMYSHOW', 'TICKETMASTER', 'PAYTM MOVIES', 'PVR', 'INOX', 'CINEPOLIS', 'XBOX', 'PLAYSTATION', 'STEAM', 'EPIC GAMES'], 'Entertainment'],
+    // Bills
+    [['ELECTRICITY', 'WATER BILL', 'GAS BILL', 'RENT', 'SOCIETY', 'MAINTENANCE', 'MUNICIPAL', 'PROPERTY TAX', 'INSURANCE', 'LIC', 'POLICY', 'EMI', 'LOAN', 'HDFC LTD', 'BAJAJ FINSERV', 'TATA POWER', 'ADANI', 'BSNL', 'JIO POSTPAID', 'AIRTEL POSTPAID', 'VI POSTPAID', 'DTH', 'TATA SKY', 'DISHTV'], 'Bills'],
+    // Health
+    [['PHARMACY', 'MEDPLUS', 'APOLLO PHARMA', 'NETMEDS', 'PHARMEASY', '1MG', 'PRISTYN', 'APOLLO HOSPITAL', 'FORTIS', 'MAX HOSPITAL', 'GYM', 'CULT FIT', 'FITSO', 'HEALTHIFY', 'PHYSIOWALA', 'DR LAL PATH', 'THYROCARE', 'METROPOLIS', 'DOCTOR', 'DENTAL', 'HOSPITAL', 'CLINIC', 'DIAGNOSTIC'], 'Health'],
+    // Education
+    [['COURSERA', 'UDACITY', 'UDEMY', 'BYJU', 'UNACADEMY', 'WHITEHAT', 'VEDANTU', 'TOPPR', 'SIMPLILEARN', 'PLURALSIGHT', 'SKILLSHARE', 'LINDA', 'LINKEDIN LEARNING', 'DUOLINGO', 'CHEGG', 'SCHOOL', 'COLLEGE', 'UNIVERSITY', 'TUITION'], 'Education'],
+    // Subscriptions
+    [['ICLOUD', 'GITHUB', 'MEDIUM', 'NOTION', 'CANVA', 'FIGMA', 'SLACK', 'ZOOM', 'MICROSOFT 365', 'GOOGLE ONE', 'SPOTIFY PREMIUM', 'YOUTUBE PREMIUM', 'APPLE ONE', 'APPLE TV', 'AUDIBLE', 'KINDLE', 'HEADSPACE', 'CALM'], 'Subscriptions'],
+  ];
+
+  for (const [keywords, category] of rules) {
+    if (keywords.some(kw => name.includes(kw))) {
+      return category;
+    }
+  }
+
+  return 'UPI'; // Default for unrecognized bank/UPI transactions
+}
 
 // Generate mock data
 const generateId = () => Math.random().toString(36).substring(2, 9);
-const now = new Date();
-const today = now.toISOString().split('T')[0];
+
+// Helper for local date string (YYYY-MM-DD)
+const getLocalDateString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 function generateMockWaterEntries(): WaterEntry[] {
+  const now = new Date();
+  const today = getLocalDateString(now);
+
   const entries: WaterEntry[] = [
-    { id: generateId(), amount: 250, timestamp: `${today}T07:00:00`, type: 'glass' },
-    { id: generateId(), amount: 500, timestamp: `${today}T09:30:00`, type: 'bottle' },
-    { id: generateId(), amount: 200, timestamp: `${today}T12:00:00`, type: 'cup' },
-    { id: generateId(), amount: 250, timestamp: `${today}T14:30:00`, type: 'glass' },
-    { id: generateId(), amount: 500, timestamp: `${today}T17:00:00`, type: 'bottle' },
-    { id: generateId(), amount: 300, timestamp: `${today}T19:30:00`, type: 'cup' },
+    { id: generateId(), amount: 250, timestamp: new Date(now.setHours(7, 0, 0, 0)).toISOString(), type: 'glass' },
+    { id: generateId(), amount: 500, timestamp: new Date(now.setHours(9, 30, 0, 0)).toISOString(), type: 'bottle' },
+    { id: generateId(), amount: 200, timestamp: new Date(now.setHours(12, 0, 0, 0)).toISOString(), type: 'cup' },
+    { id: generateId(), amount: 250, timestamp: new Date(now.setHours(14, 30, 0, 0)).toISOString(), type: 'glass' },
+    { id: generateId(), amount: 500, timestamp: new Date(now.setHours(17, 0, 0, 0)).toISOString(), type: 'bottle' },
+    { id: generateId(), amount: 300, timestamp: new Date(now.setHours(19, 30, 0, 0)).toISOString(), type: 'cup' },
   ];
   for (let d = 1; d <= 6; d++) {
-    const date = new Date(now);
+    const date = new Date();
     date.setDate(date.getDate() - d);
-    const dateStr = date.toISOString().split('T')[0];
     const count = Math.floor(Math.random() * 4) + 3;
     for (let i = 0; i < count; i++) {
       const hour = 7 + Math.floor(Math.random() * 14);
       const types: WaterEntry['type'][] = ['glass', 'bottle', 'cup'];
+      date.setHours(hour, Math.random() * 60 | 0, 0, 0);
       entries.push({
         id: generateId(),
         amount: [200, 250, 500][Math.floor(Math.random() * 3)],
-        timestamp: `${dateStr}T${hour.toString().padStart(2, '0')}:${(Math.random() * 60 | 0).toString().padStart(2, '0')}:00`,
+        timestamp: date.toISOString(),
         type: types[Math.floor(Math.random() * types.length)],
       });
     }
@@ -114,30 +156,35 @@ function generateMockExpenseEntries(): ExpenseEntry[] {
     Health: ['Pharmacy', 'Gym membership', 'Supplements', 'Doctor visit', 'Dental cleaning'],
     Education: ['Online course', 'Textbook', 'Workshop fee', 'Certification', 'Study materials'],
     Subscriptions: ['Netflix', 'Spotify', 'iCloud+', 'GitHub Pro', 'Medium'],
+    UPI: ['SWIGGY', 'ZOMATO', 'AMAZON', 'FLIPKART', 'BigBasket', 'Myntra'],
   };
+  const now = new Date();
+  
   const entries: ExpenseEntry[] = [
-    { id: generateId(), amount: 15.50, category: 'Food', description: 'Lunch at cafe', timestamp: `${today}T12:30:00` },
-    { id: generateId(), amount: 8.00, category: 'Transport', description: 'Uber ride', timestamp: `${today}T08:15:00` },
-    { id: generateId(), amount: 45.99, category: 'Shopping', description: 'New headphones', timestamp: `${today}T16:00:00` },
-    { id: generateId(), amount: 12.00, category: 'Entertainment', description: 'Movie tickets', timestamp: `${today}T19:00:00` },
-    { id: generateId(), amount: 5.50, category: 'Food', description: 'Coffee & pastry', timestamp: `${today}T09:00:00` },
-    { id: generateId(), amount: 9.99, category: 'Subscriptions', description: 'Netflix', timestamp: `${today}T00:00:00` },
+    { id: generateId(), amount: 15.50, category: 'Food', description: 'Lunch at cafe', timestamp: new Date(now.setHours(12, 30, 0, 0)).toISOString() },
+    { id: generateId(), amount: 8.00, category: 'Transport', description: 'Uber ride', timestamp: new Date(now.setHours(8, 15, 0, 0)).toISOString() },
+    { id: generateId(), amount: 45.99, category: 'Shopping', description: 'New headphones', timestamp: new Date(now.setHours(16, 0, 0, 0)).toISOString() },
+    { id: generateId(), amount: 12.00, category: 'Entertainment', description: 'Movie tickets', timestamp: new Date(now.setHours(19, 0, 0, 0)).toISOString() },
+    { id: generateId(), amount: 5.50, category: 'Food', description: 'Coffee & pastry', timestamp: new Date(now.setHours(9, 0, 0, 0)).toISOString() },
+    { id: generateId(), amount: 9.99, category: 'Subscriptions', description: 'Netflix', timestamp: new Date(now.setHours(0, 0, 0, 0)).toISOString() },
+    { id: generateId(), amount: 252.00, category: 'UPI', description: 'SWIGGY', timestamp: new Date(now.setHours(13, 15, 0, 0)).toISOString() },
+    { id: generateId(), amount: 1499.00, category: 'UPI', description: 'AMAZON', timestamp: new Date(now.setHours(10, 45, 0, 0)).toISOString() },
   ];
   for (let d = 1; d <= 30; d++) {
-    const date = new Date(now);
+    const date = new Date();
     date.setDate(date.getDate() - d);
-    const dateStr = date.toISOString().split('T')[0];
     const count = Math.floor(Math.random() * 4) + 1;
     for (let i = 0; i < count; i++) {
       const cat = categories[Math.floor(Math.random() * categories.length)];
       const descList = descriptions[cat];
       const hour = 8 + Math.floor(Math.random() * 14);
+      date.setHours(hour, Math.random() * 60 | 0, 0, 0);
       entries.push({
         id: generateId(),
         amount: Math.round((Math.random() * 80 + 3) * 100) / 100,
         category: cat,
         description: descList[Math.floor(Math.random() * descList.length)],
-        timestamp: `${dateStr}T${hour.toString().padStart(2, '0')}:${(Math.random() * 60 | 0).toString().padStart(2, '0')}:00`,
+        timestamp: date.toISOString(),
       });
     }
   }
@@ -457,24 +504,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [configured]);
 
   // ---- Computed Values ----
+  const now = new Date();
+  const todayLocal = getLocalDateString(now);
+
   const todayWaterTotal = waterEntries
-    .filter(e => e.timestamp.startsWith(today))
+    .filter(e => getLocalDateString(new Date(e.timestamp)) === todayLocal)
     .reduce((sum, e) => sum + e.amount, 0);
 
   const todayExpenseTotal = expenseEntries
-    .filter(e => e.timestamp.startsWith(today))
+    .filter(e => getLocalDateString(new Date(e.timestamp)) === todayLocal)
     .reduce((sum, e) => sum + e.amount, 0);
 
   const weekWaterData = (() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const result = [];
     for (let d = 6; d >= 0; d--) {
-      const date = new Date(now);
+      const date = new Date();
       date.setDate(date.getDate() - d);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       const shortDay = days[(date.getDay() + 6) % 7];
       const total = waterEntries
-        .filter(e => e.timestamp.startsWith(dateStr))
+        .filter(e => getLocalDateString(new Date(e.timestamp)) === dateStr)
         .reduce((sum, e) => sum + e.amount, 0);
       result.push({ day: d === 0 ? 'Today' : shortDay, amount: total, goal: waterGoal.daily });
     }
@@ -485,12 +535,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const result = [];
     for (let d = 6; d >= 0; d--) {
-      const date = new Date(now);
+      const date = new Date();
       date.setDate(date.getDate() - d);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       const shortDay = days[(date.getDay() + 6) % 7];
       const total = expenseEntries
-        .filter(e => e.timestamp.startsWith(dateStr))
+        .filter(e => getLocalDateString(new Date(e.timestamp)) === dateStr)
         .reduce((sum, e) => sum + e.amount, 0);
       result.push({ day: d === 0 ? 'Today' : shortDay, amount: Math.round(total * 100) / 100, budget: Math.round(expenseBudget.monthly / 30) });
     }
@@ -498,8 +548,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   })();
 
   const categoryBreakdown = (() => {
-    const currentMonth = now.toISOString().substring(0, 7);
-    const monthEntries = expenseEntries.filter(e => e.timestamp.startsWith(currentMonth));
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthEntries = expenseEntries.filter(e => {
+      const eDate = new Date(e.timestamp);
+      const eMonth = `${eDate.getFullYear()}-${String(eDate.getMonth() + 1).padStart(2, '0')}`;
+      return eMonth === currentMonth;
+    });
     const catMap: Record<string, number> = {};
     monthEntries.forEach(e => {
       catMap[e.category] = (catMap[e.category] || 0) + e.amount;
