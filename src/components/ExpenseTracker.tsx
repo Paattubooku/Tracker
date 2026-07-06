@@ -17,7 +17,9 @@ export default function ExpenseTracker() {
   const {
     expenseEntries, expenseBudget, todayExpenseTotal,
     weekExpenseData, categoryBreakdown, addExpenseEntry, deleteExpenseEntry, updateExpenseBudget,
+    settings,
   } = useData();
+  const currency = settings?.currency || '$';
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -87,18 +89,18 @@ export default function ExpenseTracker() {
         {/* Today */}
         <div className="rounded-2xl p-4 glass" style={{ background: isDark ? 'rgba(219, 39, 119, 0.1)' : 'rgba(236, 72, 153, 0.05)' }}>
           <p className="text-xs" style={{ color: mutedColor }}>Today</p>
-          <p className="text-xl font-bold mt-1" style={{ color: textColor }}>${todayExpenseTotal.toFixed(2)}</p>
+          <p className="text-xl font-bold mt-1" style={{ color: textColor }}>{currency}{todayExpenseTotal.toFixed(2)}</p>
           <p className="text-[10px] mt-1" style={{ color: mutedColor }}>{todayEntries.length} transactions</p>
         </div>
 
         {/* This Month */}
         <div className="rounded-2xl p-4 glass" style={{ background: cardBg }}>
           <p className="text-xs" style={{ color: mutedColor }}>This Month</p>
-          <p className="text-xl font-bold mt-1" style={{ color: textColor }}>${monthTotal.toFixed(0)}</p>
+          <p className="text-xl font-bold mt-1" style={{ color: textColor }}>{currency}{monthTotal.toFixed(0)}</p>
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(148,163,184,0.15)' : 'rgba(0,0,0,0.06)' }}>
             <div className="h-full rounded-full gradient-expense transition-all duration-500" style={{ width: `${budgetPercent}%` }} />
           </div>
-          <p className="text-[10px] mt-1" style={{ color: mutedColor }}>{budgetPercent.toFixed(0)}% of ${expenseBudget.monthly}</p>
+          <p className="text-[10px] mt-1" style={{ color: mutedColor }}>{budgetPercent.toFixed(0)}% of {currency}{expenseBudget.monthly}</p>
         </div>
 
         {/* Top Category */}
@@ -110,7 +112,7 @@ export default function ExpenseTracker() {
                 <div className="w-3 h-3 rounded-full" style={{ background: topCategory.color }} />
                 <p className="text-lg font-bold" style={{ color: textColor }}>{topCategory.name}</p>
               </div>
-              <p className="text-sm font-semibold" style={{ color: topCategory.color }}>${topCategory.value.toFixed(0)}</p>
+              <p className="text-sm font-semibold" style={{ color: topCategory.color }}>{currency}{topCategory.value.toFixed(0)}</p>
             </>
           ) : (
             <p className="text-lg font-bold mt-1" style={{ color: mutedColor }}>No data</p>
@@ -134,7 +136,7 @@ export default function ExpenseTracker() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                 <XAxis dataKey="day" tick={{ fontSize: 11, fill: mutedColor }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: mutedColor }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                <YAxis tick={{ fontSize: 11, fill: mutedColor }} axisLine={false} tickLine={false} tickFormatter={v => `${currency}${v}`} />
                 <Tooltip
                   contentStyle={{
                     background: isDark ? '#1e293b' : '#ffffff',
@@ -145,7 +147,7 @@ export default function ExpenseTracker() {
                     fontSize: '12px',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Spent']}
+                  formatter={(value: any) => [`${currency}${Number(value).toFixed(2)}`, 'Spent']}
                 />
                 <Area type="monotone" dataKey="amount" stroke="#ec4899" strokeWidth={2.5} fill="url(#expenseGrad)" />
               </AreaChart>
@@ -182,7 +184,7 @@ export default function ExpenseTracker() {
                     fontSize: '12px',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value: any) => [`$${Number(value).toFixed(2)}`, '']}
+                  formatter={(value: any) => [`${currency}${Number(value).toFixed(2)}`, '']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -192,7 +194,7 @@ export default function ExpenseTracker() {
               <div key={cat.name} className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cat.color }} />
                 <span className="text-[10px] truncate" style={{ color: mutedColor }}>{cat.name}</span>
-                <span className="text-[10px] font-medium ml-auto" style={{ color: textColor }}>${cat.value.toFixed(0)}</span>
+                <span className="text-[10px] font-medium ml-auto" style={{ color: textColor }}>{currency}{cat.value.toFixed(0)}</span>
               </div>
             ))}
           </div>
@@ -206,7 +208,7 @@ export default function ExpenseTracker() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryBreakdown} layout="vertical" barSize={16}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 10, fill: mutedColor }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: mutedColor }} axisLine={false} tickLine={false} tickFormatter={v => `${currency}${v}`} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: mutedColor }} axisLine={false} tickLine={false} width={80} />
               <Tooltip
                 contentStyle={{
@@ -218,7 +220,7 @@ export default function ExpenseTracker() {
                   fontSize: '12px',
                 }}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(value: any) => [`$${Number(value).toFixed(2)}`, '']}
+                formatter={(value: any) => [`${currency}${Number(value).toFixed(2)}`, '']}
               />
               <Bar dataKey="value" radius={[0, 8, 8, 0]}>
                 {categoryBreakdown.map((entry, i) => (
@@ -264,7 +266,7 @@ export default function ExpenseTracker() {
                       {entry.category}
                     </span>
                   </td>
-                  <td className="py-2.5 text-xs font-semibold text-right" style={{ color: textColor }}>${entry.amount.toFixed(2)}</td>
+                  <td className="py-2.5 text-xs font-semibold text-right" style={{ color: textColor }}>{currency}{entry.amount.toFixed(2)}</td>
                   <td className="py-2.5 text-right">
                     <button onClick={() => deleteExpenseEntry(entry.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash2 className="w-3.5 h-3.5 text-red-400 hover:text-red-500" />
