@@ -109,6 +109,21 @@ function parseSMS(text: string): ParsedTransaction | null {
     };
   }
 
+    // ========== PARSE: ICICI-style debit (no "for", no "; PAYEE credited") ==========
+  // "ICICI Bank Acc XX219 debited Rs. 323.00 on 07-Jul-26 InfoBIL*BPAY*0000.Avl Bal Rs. 3,496.00..."
+  const iciciDebitMatch = cleaned.match(
+    /debited\s+Rs\.?\s*([\d,]+\.?\d*)\s+on\s+([\d\w-]+)\s+([^\s.]+)/i
+  );
+  if (iciciDebitMatch) {
+    return {
+      amount: parseFloat(iciciDebitMatch[1].replace(/,/g, '')),
+      date: parseDate(iciciDebitMatch[2]),
+      payee: iciciDebitMatch[3].trim(),
+      type: 'debit',
+    };
+  }
+
+
   // ========== PARSE: Auto-debit ==========
   // "ACTFIBER bill of Rs 1237.82 for 108863157766 due on 2026-06-15, will be auto-debited on 2026-06-12-ICICI Bank."
   const autoDebitWithDate = cleaned.match(
