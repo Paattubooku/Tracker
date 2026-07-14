@@ -5,9 +5,10 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import WaterTracker from './components/WaterTracker';
 import ExpenseTracker from './components/ExpenseTracker';
+import TodoTracker from './components/TodoTracker';
 import Settings from './components/Settings';
 
-type Page = 'dashboard' | 'water' | 'expenses' | 'settings';
+type Page = 'dashboard' | 'water' | 'expenses' | 'todos' | 'settings';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -20,6 +21,8 @@ export default function App() {
         return <WaterTracker />;
       case 'expenses':
         return <ExpenseTracker />;
+      case 'todos':
+        return <TodoTracker />;
       case 'settings':
         return <Settings />;
       default:
