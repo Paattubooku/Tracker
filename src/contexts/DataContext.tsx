@@ -17,6 +17,16 @@ export interface ExpenseEntry {
   timestamp: string;
 }
 
+export interface TodoEntry {
+  id: string;
+  title: string;
+  description: string | null;
+  is_completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  due_date: string | null;
+  timestamp: string;
+}
+
 export interface WaterGoal {
   daily: number;
   reminderInterval: number;
@@ -37,13 +47,17 @@ export interface AppSettings {
 interface DataContextType {
   waterEntries: WaterEntry[];
   expenseEntries: ExpenseEntry[];
+  todoEntries: TodoEntry[];
   waterGoal: WaterGoal;
   expenseBudget: ExpenseBudget;
   settings: AppSettings;
   addWaterEntry: (amount: number, type: WaterEntry['type']) => void;
   addExpenseEntry: (entry: Omit<ExpenseEntry, 'id' | 'timestamp'>) => void;
+  addTodoEntry: (entry: Omit<TodoEntry, 'id' | 'timestamp' | 'is_completed'>) => void;
   deleteWaterEntry: (id: string) => void;
   deleteExpenseEntry: (id: string) => void;
+  deleteTodoEntry: (id: string) => void;
+  updateTodoEntry: (id: string, updates: Partial<TodoEntry>) => void;
   updateWaterGoal: (goal: Partial<WaterGoal>) => void;
   updateExpenseBudget: (budget: Partial<ExpenseBudget>) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
@@ -191,9 +205,19 @@ function generateMockExpenseEntries(): ExpenseEntry[] {
   return entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
+function generateMockTodoEntries(): TodoEntry[] {
+  const now = new Date();
+  return [
+    { id: generateId(), title: 'Prepare presentation', description: 'Slides for Q3 review', is_completed: false, priority: 'high', due_date: new Date(now.getTime() + 86400000).toISOString(), timestamp: now.toISOString() },
+    { id: generateId(), title: 'Buy groceries', description: 'Milk, Eggs, Bread', is_completed: false, priority: 'medium', due_date: null, timestamp: now.toISOString() },
+    { id: generateId(), title: 'Call mom', description: null, is_completed: true, priority: 'low', due_date: null, timestamp: new Date(now.getTime() - 86400000).toISOString() },
+  ];
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [waterEntries, setWaterEntries] = useState<WaterEntry[]>(generateMockWaterEntries);
   const [expenseEntries, setExpenseEntries] = useState<ExpenseEntry[]>(generateMockExpenseEntries);
+  const [todoEntries, setTodoEntries] = useState<TodoEntry[]>(generateMockTodoEntries);
   const [waterGoal, setWaterGoal] = useState<WaterGoal>({ daily: 2500, reminderInterval: 60 });
   const [expenseBudget, setExpenseBudget] = useState<ExpenseBudget>({
     monthly: 2000,
@@ -258,6 +282,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
             amount: Number(e.amount),
             category: e.category as string,
             description: e.description as string,
+            timestamp: e.created_at as string,
+          })));
+        }
+
+        // Load todo entries
+        const { data: todoData, error: tErr } = await sb
+          .from('todo_entries')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (tErr) throw tErr;
+        if (todoData && !cancelled) {
+          setTodoEntries(todoData.map((e: Record<string, unknown>) => ({
+            id: e.id as string,
+            title: e.title as string,
+            description: e.description as string | null,
+            is_completed: e.is_completed as boolean,
+            priority: e.priority as 'low' | 'medium' | 'high',
+            due_date: e.due_date as string | null,
             timestamp: e.created_at as string,
           })));
         }
@@ -387,6 +430,57 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setExpenseEntries(prev => prev.filter(entry => entry.id !== e.id));
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'todo_entries' },
+        (payload) => {
+          const e = payload.new as Record<string, unknown>;
+          const newEntry: TodoEntry = {
+            id: e.id as string,
+            title: e.title as string,
+            description: e.description as string | null,
+            is_completed: e.is_completed as boolean,
+            priority: e.priority as 'low' | 'medium' | 'high',
+            due_date: e.due_date as string | null,
+            timestamp: e.created_at as string,
+          };
+          setTodoEntries(prev => {
+            const matchIdx = prev.findIndex(entry =>
+              entry.title === newEntry.title &&
+              Math.abs(new Date(entry.timestamp).getTime() - new Date(newEntry.timestamp).getTime()) < 5000
+            );
+            if (matchIdx !== -1) {
+              const updated = [...prev];
+              updated[matchIdx] = newEntry;
+              return updated;
+            }
+            return [newEntry, ...prev];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'todo_entries' },
+        (payload) => {
+          const e = payload.new as Record<string, unknown>;
+          setTodoEntries(prev => prev.map(entry => entry.id === e.id ? {
+            ...entry,
+            title: e.title as string,
+            description: e.description as string | null,
+            is_completed: e.is_completed as boolean,
+            priority: e.priority as 'low' | 'medium' | 'high',
+            due_date: e.due_date as string | null,
+          } : entry));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'todo_entries' },
+        (payload) => {
+          const e = payload.old as Record<string, unknown>;
+          setTodoEntries(prev => prev.filter(entry => entry.id !== e.id));
+        }
+      )
       .subscribe();
 
     return () => {
@@ -462,6 +556,58 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [configured, expenseEntries]);
+
+  const addTodoEntry = useCallback(async (entry: Omit<TodoEntry, 'id' | 'timestamp' | 'is_completed'>) => {
+    const optimisticEntry: TodoEntry = {
+      ...entry,
+      id: generateId(),
+      is_completed: false,
+      timestamp: new Date().toISOString(),
+    };
+    setTodoEntries(prev => [optimisticEntry, ...prev]);
+
+    if (supabase && configured) {
+      const { error } = await supabase.from('todo_entries').insert({
+        title: entry.title,
+        description: entry.description,
+        priority: entry.priority,
+        due_date: entry.due_date,
+      });
+      if (error) {
+        console.error('Failed to add todo entry:', error);
+        setTodoEntries(prev => prev.filter(e => e.id !== optimisticEntry.id));
+      }
+    }
+  }, [configured]);
+
+  const updateTodoEntry = useCallback(async (id: string, updates: Partial<TodoEntry>) => {
+    setTodoEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+
+    if (supabase && configured) {
+      const dbUpdates: Record<string, unknown> = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.is_completed !== undefined) dbUpdates.is_completed = updates.is_completed;
+      if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+      if (updates.due_date !== undefined) dbUpdates.due_date = updates.due_date;
+
+      const { error } = await supabase.from('todo_entries').update(dbUpdates).eq('id', id);
+      if (error) console.error('Failed to update todo entry:', error);
+    }
+  }, [configured]);
+
+  const deleteTodoEntry = useCallback(async (id: string) => {
+    const prev = todoEntries;
+    setTodoEntries(entries => entries.filter(e => e.id !== id));
+
+    if (supabase && configured) {
+      const { error } = await supabase.from('todo_entries').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to delete todo entry:', error);
+        setTodoEntries(prev);
+      }
+    }
+  }, [configured, todoEntries]);
 
   const updateWaterGoal = useCallback(async (goal: Partial<WaterGoal>) => {
     setWaterGoal(prev => ({ ...prev, ...goal }));
@@ -565,8 +711,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      waterEntries, expenseEntries, waterGoal, expenseBudget, settings,
-      addWaterEntry, addExpenseEntry, deleteWaterEntry, deleteExpenseEntry,
+      waterEntries, expenseEntries, todoEntries, waterGoal, expenseBudget, settings,
+      addWaterEntry, addExpenseEntry, addTodoEntry, deleteWaterEntry, deleteExpenseEntry, deleteTodoEntry, updateTodoEntry,
       updateWaterGoal, updateExpenseBudget, updateSettings,
       todayWaterTotal, todayExpenseTotal,
       weekWaterData, weekExpenseData, categoryBreakdown,
