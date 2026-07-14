@@ -2,10 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   Droplets, Wallet, LayoutDashboard, Settings, Sun, Moon,
-  Menu, X, ChevronRight
+  Menu, X, ChevronRight, CheckSquare
 } from 'lucide-react';
 
-type Page = 'dashboard' | 'water' | 'expenses' | 'settings';
+type Page = 'dashboard' | 'water' | 'expenses' | 'todos' | 'settings';
 
 interface LayoutProps {
   currentPage: Page;
@@ -17,6 +17,7 @@ const navItems: { id: Page; label: string; icon: typeof Droplets }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'water', label: 'Water', icon: Droplets },
   { id: 'expenses', label: 'Expenses', icon: Wallet },
+  { id: 'todos', label: 'Todos', icon: CheckSquare },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
